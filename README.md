@@ -2,17 +2,20 @@
 
 Protocolo de liquid staking estilo stETH/wstETH: shares rebasing, wrapper value-accruing, oracle de rewards/slashing, cola de withdrawal asíncrona y depósitos Eth2. Solidity `0.8.24` + Foundry.
 
-**Estado:** Fases **0–6** ✅ · Fase **7** 🔒 pendiente de autorización.  
-**Suite:** `forge test` → **84 PASS**.
+**Estado:** Fases **0–7** ✅ (módulo v1 cerrado).  
+**Suite:** `forge test` → **90 PASS**.
 
 ## Docs
 
 | Archivo | Contenido |
 |---------|-----------|
-| [`doc/planificacion.md`](./doc/planificacion.md) | Fases, arquitectura, criterios de aceptación |
-| [`doc/diagrama-de-clases.md`](./doc/diagrama-de-clases.md) | UML de contratos |
+| [`doc/README.md`](./doc/README.md) | Índice de documentación |
+| [`doc/planificacion.md`](./doc/planificacion.md) | Fases, arquitectura, criterios |
+| [`doc/diagrama-de-clases.md`](./doc/diagrama-de-clases.md) | UML |
 | [`doc/diagrama-de-flujo.md`](./doc/diagrama-de-flujo.md) | Submit / oracle / queue |
 | [`doc/flujograma.md`](./doc/flujograma.md) | Ciclo e2e |
+| [`doc/SWC-AUDIT.md`](./doc/SWC-AUDIT.md) | Matriz SWC-100–136 |
+| [`doc/GAS.md`](./doc/GAS.md) | Optimizaciones + snapshot |
 
 ## Stack
 
@@ -21,9 +24,9 @@ Protocolo de liquid staking estilo stETH/wstETH: shares rebasing, wrapper value-
 | Contratos | Solidity `0.8.24` (pragma fijo) |
 | Tooling | Foundry (`forge` / `cast` / `anvil`) |
 | Deps | forge-std **v1.16.2**, OpenZeppelin **v5.2.0** en `lib/` |
-| Math | WAD `1e18` / RAY `1e27` (`ShareMath`) |
-| EVM | Cancun (`evm_version = "cancun"`) |
-| Seguridad | Custom errors, CEI, `.call{value}` (fases siguientes) |
+| Math | WAD `1e18` / RAY `1e27` (`ShareMath` + OZ `mulDiv`) |
+| Guard | `ReentrancyGuardTransient` (Cancun) |
+| EVM | Cancun (`via_ir = true`) |
 
 ## Setup Foundry
 
@@ -41,7 +44,7 @@ forge install foundry-rs/forge-std@v1.16.2 --no-git --shallow
 forge install OpenZeppelin/openzeppelin-contracts@v5.2.0 --no-git --shallow
 ```
 
-## Deploy local (stub Fase 0)
+## Deploy local
 
 ```bash
 anvil   # otra terminal
@@ -50,16 +53,22 @@ forge script script/Deploy.s.sol:Deploy --rpc-url http://127.0.0.1:8545 --broadc
 
 Env: copiar `.env.example` → `.env`.
 
-## Alcance v1 (resumen)
+## Gas
 
-- `stETH` (rebasing shares) + `wstETH` (wrapper)
-- Oracle comité → `UnauthorizedOracle()`
+```bash
+forge test --match-contract LiquidStakingGasTest --gas-report
+forge snapshot --match-contract LiquidStakingGasTest
+```
+
+## Alcance v1
+
+- `StETH` = pool unificado (rebasing shares + buffer + CL + deposits + finalize)
+- `wstETH` wrapper value-accruing (1 wstETH = 1 share)
+- Oracle comité on-chain → `UnauthorizedOracle()`
 - Rebase positivo / negativo (slashing)
-- `WithdrawalQueue` request-ID
-- Fee caps inmutables + Eth2 Deposit Contract (mock en tests)
+- `WithdrawalQueue` request-ID (`finalize` vía finalizer = oracle en deploy)
+- Fee caps inmutables + Eth2 Deposit Contract (mock en lab)
+- Fuzz slash + invariantes de solvencia
+- `SWC-AUDIT.md` + gas snapshot
 
 Frontend Next.js: **fuera de v1**.
-
-## Autorización de fases
-
-Ver [`doc/planificacion.md`](./doc/planificacion.md). Responde `Autorizo Fase N` para continuar.

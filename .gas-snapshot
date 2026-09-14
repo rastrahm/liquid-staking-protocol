@@ -1,0 +1,6 @@
+LiquidStakingGasTest:testGas_depositBufferedEther_oneValidator() (gas: 493067)
+LiquidStakingGasTest:testGas_oracleReport_positiveRebase() (gas: 151952)
+LiquidStakingGasTest:testGas_submit() (gas: 41691)
+LiquidStakingGasTest:testGas_unwrap() (gas: 112066)
+LiquidStakingGasTest:testGas_withdrawal_requestFinalizeClaim() (gas: 222232)
+LiquidStakingGasTest:testGas_wrap() (gas: 111534)

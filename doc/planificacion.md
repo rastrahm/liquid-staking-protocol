@@ -1,8 +1,8 @@
 # Planificación — Módulo 18: Liquid Staking & Staking Derivatives
 
-**Estado:** Fases **0–6** ✅ · Fase **7** 🔒 pendiente.  
-**Regla de avance:** cada fase requiere **autorización explícita** del responsable antes de empezar (*“autorizo Fase N”* o equivalente).
-**Suite:** `forge test` → **84 PASS**.
+**Estado:** Fases **0–7** ✅ (módulo v1 cerrado).  
+**Regla de avance:** la regla de autorización por fase aplicó durante la construcción; v1 ya no tiene fases pendientes.  
+**Suite:** `forge test` → **90 PASS**.
 
 ---
 
@@ -26,16 +26,16 @@ Stack: **Foundry + Solidity `0.8.24`**. Frontend Next.js queda **fuera de alcanc
 
 | Incluido (v1) | Excluido (v1) |
 |---------------|---------------|
-| `StETH` shares-based rebasing ERC-20 | Multi-chain / L2 nativo |
+| `StETH` = pool unificado (shares rebasing + buffer + oracle + deposits) | Multi-chain / L2 nativo |
 | `WstETH` wrap/unwrap value-accruing | stETH en restaking (EigenLayer, etc.) |
-| `LiquidStakingPool` buffer + deposit 32 ETH | Distributed Validator Technology (DVT) |
-| `AccountingOracle` comité + `UnauthorizedOracle()` | Oracle descentralizado Chainlink-only |
-| `WithdrawalQueue` request-ID (no NFT obligatorio) | NFT withdrawal tickets (post-v1 opcional) |
-| `FeeDistributor` caps inmutables CL/EL | Governance on-chain de fees |
-| `ShareMath` WAD/RAY | Vaults / strategies encima del LST |
+| `depositBufferedEther` → Eth2 Deposit Contract (mock en lab) | Distributed Validator Technology (DVT) |
+| `AccountingOracle` comité on-chain + `UnauthorizedOracle()` | Quorum multi-firma / EIP-712 de reportes |
+| `WithdrawalQueue` request-ID (no NFT) | NFT withdrawal tickets (post-v1 opcional) |
+| `FeeDistributor` caps inmutables | Governance on-chain de fees |
+| `ShareMath` WAD/RAY + OZ `mulDiv` | Vaults / strategies encima del LST |
 | `NodeOperatorsRegistry` keys básicas | Marketplace de operadores |
-| Tests: mint ratio, rebase +/−, queue lifecycle, fuzz slash | Frontend Next.js (App Router) |
-| `Deploy.s.sol` + mocks DepositContract | Mainnet production hardening / insurance |
+| Tests: unit + fuzz slash + invariantes + gas | Frontend Next.js (App Router) |
+| `Deploy.s.sol` + `SWC-AUDIT` + `.gas-snapshot` | Mainnet production hardening / insurance |
 
 ---
 
@@ -44,7 +44,7 @@ Stack: **Foundry + Solidity `0.8.24`**. Frontend Next.js queda **fuera de alcanc
 ### Suite (`evm-smart-contracts-suite` + `solidity.cursorrules`)
 
 - Solidity **exacto** `0.8.24` (sin floating pragma).
-- OpenZeppelin Contracts v5.x (`ReentrancyGuard`, `Ownable2Step` / `AccessControl` donde aplique).
+- OpenZeppelin Contracts v5.x (`ReentrancyGuardTransient`, `Ownable2Step`, `ERC20`, `Math`).
 - Foundry: unit + fuzz (`runs >= 1000`) + invariant + gas reports / snapshot.
 - **Custom errors** (no `require` strings).
 - CEI estricto; ETH vía **`.call{value: ...}("")`** (nunca `transfer`/`send`).
@@ -69,74 +69,75 @@ Stack: **Foundry + Solidity `0.8.24`**. Frontend Next.js queda **fuera de alcanc
 
 ---
 
-## 4. Arquitectura (propuesta v1)
+## 4. Arquitectura (v1 implementado)
 
 ```
 18-liquid-staking-protocol/
 ├── README.md
 ├── .cursorrules
 ├── .gitignore
+├── .env.example
+├── .gas-snapshot
+├── foundry.toml
+├── remappings.txt
 ├── doc/
+│   ├── README.md
 │   ├── planificacion.md
 │   ├── diagrama-de-clases.md
 │   ├── diagrama-de-flujo.md
-│   └── flujograma.md
+│   ├── flujograma.md
+│   ├── SWC-AUDIT.md
+│   └── GAS.md
 ├── src/
-│   ├── LiquidStakingPool.sol       # Core: buffer, report, deposits
-│   ├── StETH.sol                   # Rebasing ERC-20 (o unificado con pool)
-│   ├── WstETH.sol                  # Wrapper value-accruing
-│   ├── AccountingOracle.sol        # Comité + reportes
-│   ├── WithdrawalQueue.sol         # request → finalize → claim
-│   ├── FeeDistributor.sol          # Split + caps
-│   ├── NodeOperatorsRegistry.sol   # Signing keys
+│   ├── StETH.sol                      # Pool unificado: shares + buffer + CL + deposits + finalizeWithdrawals
+│   ├── WstETH.sol                     # Wrapper value-accruing (1 wstETH = 1 share)
+│   ├── AccountingOracle.sol           # Comité + submitReport → handleOracleReport
+│   ├── WithdrawalQueue.sol            # request → finalize → claim (+ IWithdrawalFinalizer)
+│   ├── FeeDistributor.sol             # Fee bps + split treasury/operators
+│   ├── NodeOperatorsRegistry.sol      # Signing keys 48/96
 │   ├── interfaces/
-│   │   ├── ILiquidStakingPool.sol
+│   │   ├── ILiquidStakingPool.sol     # handleOracleReport
 │   │   ├── IStETH.sol
 │   │   ├── IWstETH.sol
 │   │   ├── IWithdrawalQueue.sol
 │   │   ├── IAccountingOracle.sol
-│   │   └── IDepositContract.sol
+│   │   ├── IDepositContract.sol
+│   │   └── INodeOperatorsRegistry.sol
 │   ├── libraries/
-│   │   └── ShareMath.sol           # WAD / RAY conversions
+│   │   └── ShareMath.sol
 │   ├── errors/
 │   │   └── LiquidStakingErrors.sol
 │   └── mocks/
-│       ├── MockDepositContract.sol
-│       └── MockOracle.sol
+│       └── MockDepositContract.sol
 ├── test/
 │   ├── ShareMath.t.sol
 │   ├── StETH.t.sol
 │   ├── WstETH.t.sol
-│   ├── LiquidStakingPool.t.sol
 │   ├── OracleReport.t.sol
+│   ├── DepositBufferedEther.t.sol
 │   ├── WithdrawalQueue.t.sol
-│   ├── FeeDistributor.t.sol
-│   ├── fuzz/
-│   │   └── SlashingResilience.t.sol
+│   ├── helpers/Harnesses.sol
+│   ├── fuzz/SlashingResilience.t.sol
 │   ├── invariant/
-│   │   └── PoolSolvency.t.sol
-│   └── gas/
-│       └── LiquidStaking.gas.t.sol
-├── script/
-│   └── Deploy.s.sol
-├── foundry.toml
-├── remappings.txt
-├── .env.example
-└── .gas-snapshot
+│   │   ├── LiquidStakingHandler.sol
+│   │   └── PoolSolvency.invariant.t.sol
+│   └── gas/LiquidStaking.gas.t.sol
+└── script/
+    └── Deploy.s.sol
 ```
 
 ### Contratos y responsabilidades
 
 | Artefacto | Responsabilidad |
 |-----------|-----------------|
-| `StETH` / Pool | Submit ETH → mint shares; `balanceOf` rebasing |
-| `WstETH` | Wrap/unwrap; rate `stEthPerToken` |
-| `AccountingOracle` | Solo comité; llama `handleOracleReport` |
-| `WithdrawalQueue` | Lock shares; finalize; claim ETH |
-| `FeeDistributor` | Mint fee shares a treasury/operators |
-| `ShareMath` | `ethToShares` / `sharesToEth` WAD-safe |
-| `NodeOperatorsRegistry` | Keys para `depositBufferedEther` |
-| `IDepositContract` | Interfaz Eth2 + mock en tests |
+| `StETH` | Submit ETH → mint shares; rebasing `balanceOf`; buffer+CL; oracle report; `depositBufferedEther`; `finalizeWithdrawals` |
+| `WstETH` | Wrap/unwrap; `stEthPerToken` / `tokensPerStEth`; `receive()` ETH→submit+mint |
+| `AccountingOracle` | Membership; intervalo; `submitReport` → pool |
+| `WithdrawalQueue` | Lock shares; finalize (burn+unlock ETH); claim CEI |
+| `FeeDistributor` | `feeOnReward` + `splitShares` (immutables + cap 10%) |
+| `ShareMath` | `ethToShares` / `sharesToEth` / `mulDiv` / `shareRateRay` |
+| `NodeOperatorsRegistry` | Operators + keys; `assignNextSigningKeys` solo pool |
+| `MockDepositContract` | Lab Eth2 deposit (32 ETH) |
 
 ---
 
@@ -148,29 +149,32 @@ error ZeroDeposit();
 error InsufficientBalance();
 error InvalidReport();
 error ReportTooEarly();
-error NegativeRebaseBlocked();     // opcional: clamp vs revert según diseño Fase 3
+error NegativeRebaseBlocked();     // pooled=0 con shares>0
 error WithdrawalNotFinalized();
 error WithdrawalAlreadyClaimed();
 error WithdrawalNotOwner();
 error FeeCapExceeded();
 error EthTransferFailed();
 error ZeroAddress();
-error Paused();
+error Paused();                    // reservado (no cableado en v1)
 error NoSigningKeys();
-error MathDivisionByZero();        // ShareMath.mulDiv
+error MathDivisionByZero();
+error OnlyPool();                  // NodeOperatorsRegistry.assignNextSigningKeys
+error OnlyWithdrawalQueue();       // StETH.finalizeWithdrawals
 ```
 
 Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdrawal queue lifecycle, fee caps, manejo de negative rebase.
 
 ### Parámetros iniciales (v1 lab)
 
-| Parámetro | Valor propuesto v1 |
-|-----------|-------------------|
+| Parámetro | Valor v1 |
+|-----------|----------|
 | `MAX_PROTOCOL_FEE_BPS` | `1000` (10%) inmutable |
-| Precisión | WAD `1e18`, RAY `1e27` donde aplique rate |
-| Deposit size | `32 ether` por validador |
-| Oracle `REPORT_INTERVAL` | configurable (p.ej. 1 hours en tests) |
-| Withdrawal mode | `requestId` (uint256), no NFT en v1 |
+| Precisión | WAD `1e18`, RAY `1e27` (`shareRateRay`) |
+| `DEPOSIT_SIZE` | `32 ether` |
+| Oracle `reportInterval` | configurable (tests: `1 hours`; deploy env default `3600`) |
+| Withdrawal mode | `requestId` (uint256), no NFT |
+| Oracle auth | `msg.sender` ∈ `members` (sin firmas EIP-712 en v1) |
 
 ---
 
@@ -194,7 +198,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 | 4 | `NodeOperatorsRegistry` + DepositContract integration | ✅ Completada | ✅ Autorizada |
 | 5 | `WithdrawalQueue` request / finalize / claim | ✅ Completada | ✅ Autorizada |
 | 6 | Suite seguridad: fuzz slash + invariantes solvencia | ✅ Completada | ✅ Autorizada |
-| 7 | Gas + Deploy + NatSpec / cierre v1 | 🔒 Pendiente | — |
+| 7 | Gas + Deploy + NatSpec / cierre v1 | ✅ Completada | ✅ Autorizada |
 
 **Cómo autorizar:** responde en el chat con `Autorizo Fase N` (o rechaza con cambios concretos).
 
@@ -349,7 +353,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ---
 
-### Fase 7 — Gas + Deploy + cierre v1 🔒
+### Fase 7 — Gas + Deploy + cierre v1 ✅
 
 **Objetivo:** deploy reproducible, NatSpec completo, gas snapshot, docs sync.
 
@@ -360,25 +364,33 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 **Criterio de salida:** deploy local OK; suite completa verde; planificación actualizada.
 
+**Hecho (2026-09-14):**
+- `script/Deploy.s.sol` — StETH, WstETH, FeeDistributor, Oracle, Queue, Registry, MockDeposit + wiring.
+- `.env.example` ampliado; `test/gas/LiquidStaking.gas.t.sol` + `.gas-snapshot`.
+- `doc/SWC-AUDIT.md` (matriz SWC-100–136, estilo módulo 01); `doc/GAS.md`; `doc/README.md`.
+- Diagramas + planificación realineados al código (pool = `StETH`, APIs reales, sin `LiquidStakingPool` / `MockOracle`).
+- **`forge test` → 90 PASS**.
+
 ---
 
 ## 8. Checklist de aceptación global (v1)
 
-- [ ] Dual-token `stETH` + `wstETH` operativo
-- [ ] Oracle solo comité → `UnauthorizedOracle()`
-- [ ] Rebase positivo y negativo cubiertos por tests
-- [ ] WithdrawalQueue: request / finalize / claim
-- [ ] Fee caps inmutables enforced
-- [ ] ShareMath WAD/RAY sin lock de fondos en fuzz slash
-- [ ] Integración mock Deposit Contract 32 ETH
-- [ ] CEI + `.call{value}` + custom errors + NatSpec
-- [ ] `forge test` (unit + fuzz + invariant) verde
-- [ ] Frontend Next.js **no** incluido (post-v1)
+- [x] Dual-token `stETH` + `wstETH` operativo
+- [x] Oracle solo comité → `UnauthorizedOracle()`
+- [x] Rebase positivo y negativo cubiertos por tests
+- [x] WithdrawalQueue: request / finalize / claim
+- [x] Fee caps inmutables enforced
+- [x] ShareMath WAD/RAY sin lock de fondos en fuzz slash
+- [x] Integración mock Deposit Contract 32 ETH
+- [x] CEI + `.call{value}` + custom errors + NatSpec
+- [x] `forge test` (unit + fuzz + invariant) verde
+- [x] Frontend Next.js **no** incluido (post-v1)
+- [x] `doc/SWC-AUDIT.md` (estilo módulo 01)
+- [x] Gas snapshot + `Deploy.s.sol`
 
 ---
 
 ## 9. Próximo paso
 
-**Fase 6 cerrada.** Esperando autorización para la **Fase 7** (Gas + Deploy + NatSpec / cierre v1).
-
-Responde: **`Autorizo Fase 7`** para continuar.
+**Módulo v1 cerrado (Fases 0–7 ✅).**  
+Post-v1 opcional: frontend Next.js, quorum/firmas EIP-712 en oracle, deposit data root Eth2 real, NFT withdrawal tickets.
