@@ -2,8 +2,8 @@
 
 Protocolo de liquid staking estilo stETH/wstETH: shares rebasing, wrapper value-accruing, oracle de rewards/slashing, cola de withdrawal asíncrona y depósitos Eth2. Solidity `0.8.24` + Foundry.
 
-**Estado:** Fase **0** ✅ · Fases **1–7** 🔒 pendientes de autorización.  
-**Suite:** `forge test` → ver sección Setup.
+**Estado:** Fases **0–1** ✅ · Fases **2–7** 🔒 pendientes de autorización.  
+**Suite:** `forge test` → **29 PASS**.
 
 ## Docs
 

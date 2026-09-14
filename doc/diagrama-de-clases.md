@@ -1,7 +1,7 @@
 # Diagrama de clases — Liquid Staking & Staking Derivatives
 
-Vista estructural propuesta de contratos, interfaces y librerías (módulo 18, **v1 — diseño**).  
-**Sync:** 2026-09-14 · Estado: planificación (sin código aún).
+Vista estructural de contratos, interfaces y librerías (módulo 18).  
+**Sync:** 2026-09-14 · Fases **0–1** ✅ (`StETH` + `ShareMath` implementados).
 
 ## Diagrama (Mermaid)
 
