@@ -1,8 +1,8 @@
 # Planificación — Módulo 18: Liquid Staking & Staking Derivatives
 
-**Estado:** Fases **0–3** ✅ · Fases **4–7** 🔒 pendientes.  
+**Estado:** Fases **0–4** ✅ · Fases **5–7** 🔒 pendientes.  
 **Regla de avance:** cada fase requiere **autorización explícita** del responsable antes de empezar (*“autorizo Fase N”* o equivalente).
-**Suite:** `forge test` → **57 PASS**.
+**Suite:** `forge test` → **66 PASS**.
 
 ---
 
@@ -191,7 +191,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 | 1 | `ShareMath` + `StETH` submit/mint shares | ✅ Completada | ✅ Autorizada |
 | 2 | `WstETH` wrap/unwrap | ✅ Completada | ✅ Autorizada |
 | 3 | `AccountingOracle` + rebase +/− + fees | ✅ Completada | ✅ Autorizada |
-| 4 | `NodeOperatorsRegistry` + DepositContract integration | 🔒 Pendiente | — |
+| 4 | `NodeOperatorsRegistry` + DepositContract integration | ✅ Completada | ✅ Autorizada |
 | 5 | `WithdrawalQueue` request / finalize / claim | 🔒 Pendiente | — |
 | 6 | Suite seguridad: fuzz slash + invariantes solvencia | 🔒 Pendiente | — |
 | 7 | Gas + Deploy + NatSpec / cierre v1 | 🔒 Pendiente | — |
@@ -289,7 +289,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ---
 
-### Fase 4 — Validators + Deposit Contract 🔒
+### Fase 4 — Validators + Deposit Contract ✅
 
 **Objetivo:** drenar buffer en múltiplos de 32 ETH hacia el deposit contract.
 
@@ -298,6 +298,14 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 3. Contadores `depositedValidators` / tracking beacon balance inicial post-deposit.
 
 **Criterio de salida:** tests de depósito 32 ETH × N y fallo sin keys/buffer.
+
+**Hecho (2026-09-14):**
+- `IDepositContract` + `MockDepositContract` (lab Eth2 deposit).
+- `NodeOperatorsRegistry`: operadores, signing keys 48/96, `assignNextSigningKeys` solo pool.
+- `StETH.depositBufferedEther`: buffer → deposit contract; `clBalance` provisional; pooled invariante.
+- `depositedValidators`, `withdrawalCredentials`, wiring owner.
+- Tests: `DepositBufferedEther.t.sol` (unit + fuzz).
+- **`forge test` → 66 PASS**.
 
 ---
 
@@ -355,6 +363,6 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ## 9. Próximo paso
 
-**Fase 3 cerrada.** Esperando autorización para la **Fase 4** (`NodeOperatorsRegistry` + Deposit Contract).
+**Fase 4 cerrada.** Esperando autorización para la **Fase 5** (`WithdrawalQueue` request / finalize / claim).
 
-Responde: **`Autorizo Fase 4`** para continuar.
+Responde: **`Autorizo Fase 5`** para continuar.

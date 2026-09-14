@@ -48,4 +48,7 @@ library LiquidStakingErrors {
 
     /// @notice Division by zero in ShareMath.
     error MathDivisionByZero();
+
+    /// @notice Caller is not the staking pool.
+    error OnlyPool();
 }

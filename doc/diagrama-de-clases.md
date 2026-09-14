@@ -1,7 +1,7 @@
 # Diagrama de clases — Liquid Staking & Staking Derivatives
 
 Vista estructural de contratos, interfaces y librerías (módulo 18).  
-**Sync:** 2026-09-14 · Fases **0–3** ✅ (+ Oracle, FeeDistributor, rebase).
+**Sync:** 2026-09-14 · Fases **0–4** ✅ (+ DepositContract + NodeOperatorsRegistry).
 
 ## Diagrama (Mermaid)
 
