@@ -1,8 +1,8 @@
 # Planificación — Módulo 18: Liquid Staking & Staking Derivatives
 
-**Estado:** Fases **0–1** ✅ · Fases **2–7** 🔒 pendientes.  
+**Estado:** Fases **0–2** ✅ · Fases **3–7** 🔒 pendientes.  
 **Regla de avance:** cada fase requiere **autorización explícita** del responsable antes de empezar (*“autorizo Fase N”* o equivalente).
-**Suite:** `forge test` → **29 PASS**.
+**Suite:** `forge test` → **44 PASS**.
 
 ---
 
@@ -189,7 +189,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 |------|--------|--------|--------------|
 | 0 | Setup Foundry + estructura + errors/math stub | ✅ Completada | ✅ Autorizada |
 | 1 | `ShareMath` + `StETH` submit/mint shares | ✅ Completada | ✅ Autorizada |
-| 2 | `WstETH` wrap/unwrap | 🔒 Pendiente | — |
+| 2 | `WstETH` wrap/unwrap | ✅ Completada | ✅ Autorizada |
 | 3 | `AccountingOracle` + rebase +/− + fees | 🔒 Pendiente | — |
 | 4 | `NodeOperatorsRegistry` + DepositContract integration | 🔒 Pendiente | — |
 | 5 | `WithdrawalQueue` request / finalize / claim | 🔒 Pendiente | — |
@@ -249,7 +249,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ---
 
-### Fase 2 — WstETH wrapper 🔒
+### Fase 2 — WstETH wrapper ✅
 
 **Objetivo:** wrap/unwrap con paridad de valor y balance ERC-20 no rebasing.
 
@@ -258,6 +258,13 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 3. Views: `getWstETHByStETH`, `getStETHByWstETH`, `stEthPerToken`, `tokensPerStEth`.
 
 **Criterio de salida:** tests de paridad wrap/unwrap + post-rebase en verde.
+
+**Hecho (2026-09-14):**
+- `IWstETH` + `WstETH` (OZ `ERC20` + `ReentrancyGuardTransient`).
+- `wrap` / `unwrap`; `receive()` ETH → `stETH.submit` + mint wstETH.
+- Views de rate; 1 wstETH = 1 share; balance no rebasea tras rewards.
+- Tests: `WstETH.t.sol` (paridad, post-rebase, fuzz).
+- **`forge test` → 44 PASS**.
 
 ---
 
@@ -340,6 +347,6 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ## 9. Próximo paso
 
-**Fase 1 cerrada.** Esperando autorización para la **Fase 2** (`WstETH` wrap/unwrap).
+**Fase 2 cerrada.** Esperando autorización para la **Fase 3** (`AccountingOracle` + rebase +/− + fees).
 
-Responde: **`Autorizo Fase 2`** para continuar.
+Responde: **`Autorizo Fase 3`** para continuar.
