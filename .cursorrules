@@ -1,0 +1,31 @@
+# .cursorrules — Module 18: Liquid Staking & Staking Derivatives Protocol
+
+## MODULE OVERVIEW
+Focus on building liquid staking token infrastructure, validator deposit contract integrations, rebasing/value-accruing ERC-20 token models (stETH/wstETH style), oracle-driven validator reward distribution, and an asynchronous withdrawal queue using Foundry and Solidity 0.8.24.
+
+---
+
+## 1. TECHNICAL CONSTRAINTS & STACK
+
+- **Compiler Version:** Strictly `pragma solidity 0.8.24;` (no floating pragmas).
+- **Tooling:** Foundry (`forge` for unit testing, deposit simulation, oracle updates, and gas profiling).
+- **ETH Deposit Contract:** Standard Eth2 Deposit Contract interface (`0x00000000219ab540356cBB839Cbe05303d7705Fa` spec).
+- **Math & Precision:** Ray/Wad math precision (1e27 / 1e18) for share-to-underlying conversion calculations.
+
+---
+
+## 2. CODING & SECURITY RULES
+
+- **Dual-Token Accounting Model:** Implement both shares-based rebasing accounting (`stETH`) and share-wrapper value-accruing accounting (`wstETH`).
+- **Oracle Verification & Slashing Protection:** Restrict validator balance and reward reports strictly to authorized Oracle committee signatures (`error UnauthorizedOracle()`). Handle negative rebase (validator slashing) without breaking pool solvency.
+- **Asynchronous Withdrawal Queue:** Implement an NFT-backed or request-ID-backed withdrawal queue (`WithdrawalQueue`) to process un-staking requests in batches safely after execution finality.
+- **Fee Split & Treasury:** Enforce immutable protocol fee caps on consensus and execution layer rewards split between node operators, protocol treasury, and stakers.
+
+---
+
+## 3. TESTING REQUIREMENTS
+
+- **Foundry Unit Tests:** Test deposit-to-share minting ratio accuracy under varying pool share values.
+- **Positive & Negative Rebase Tests:** Assert correct balance updates across all holders when oracle reports staking rewards or slashing penalties.
+- **Withdrawal Queue Lifecycle Tests:** Simulate withdrawal request creation, finalization by oracle, and ETH claim execution.
+- **Slashing Resilience Fuzzing:** Fuzz negative yield scenarios to ensure the shares-to-token converter logic does not overflow or lock user funds.
