@@ -1,6 +1,6 @@
 # Planificación — Módulo 18: Liquid Staking & Staking Derivatives
 
-**Estado:** Fase **0** 🔒 pendiente de autorización.  
+**Estado:** Fase **0** ✅ completada · Fases **1–7** 🔒 pendientes.  
 **Regla de avance:** cada fase requiere **autorización explícita** del responsable antes de empezar (*“autorizo Fase N”* o equivalente).
 
 ---
@@ -156,6 +156,7 @@ error EthTransferFailed();
 error ZeroAddress();
 error Paused();
 error NoSigningKeys();
+error MathDivisionByZero();        // ShareMath.mulDiv
 ```
 
 Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdrawal queue lifecycle, fee caps, manejo de negative rebase.
@@ -185,7 +186,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 | Fase | Nombre | Estado | Autorización |
 |------|--------|--------|--------------|
-| 0 | Setup Foundry + estructura + errors/math stub | 🔒 Pendiente | ⏳ Esperando |
+| 0 | Setup Foundry + estructura + errors/math stub | ✅ Completada | ✅ Autorizada |
 | 1 | `ShareMath` + `StETH` submit/mint shares | 🔒 Pendiente | — |
 | 2 | `WstETH` wrap/unwrap | 🔒 Pendiente | — |
 | 3 | `AccountingOracle` + rebase +/− + fees | 🔒 Pendiente | — |
@@ -200,7 +201,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ## 7. Detalle por fase
 
-### Fase 0 — Setup Foundry + estructura 🔒
+### Fase 0 — Setup Foundry + estructura ✅
 
 **Objetivo:** repo compilable con layout del módulo y stubs.
 
@@ -212,7 +213,16 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 **Criterio de salida:** `forge build` y `forge test` en verde (smoke).
 
-**Entregables:** estructura de carpetas, config Foundry, errors base, README.
+**Hecho (2026-09-14):**
+- `foundry.toml` (solc `0.8.24`, Cancun, optimizer `10_000`, `via_ir`, fuzz `runs = 1000`).
+- `remappings.txt`: `forge-std/`, `@openzeppelin/contracts/`.
+- Dependencias en `lib/` (gitignored): forge-std **v1.16.2**, OpenZeppelin **v5.2.0** (copiadas del módulo 16).
+- Carpetas `src/{interfaces,libraries,errors,mocks}`, `test/{fuzz,invariant,gas,helpers}`, `script/`.
+- `src/errors/LiquidStakingErrors.sol` — 15 custom errors (incl. `UnauthorizedOracle`, `MathDivisionByZero`).
+- `src/libraries/ShareMath.sol` — WAD/RAY + stubs `ethToShares` / `sharesToEth` / `mulDiv`.
+- Stub `src/Placeholder.sol` + `test/Placeholder.t.sol` (ping, remapping IERC20, ShareMath, selector oracle, fuzz).
+- Stub `script/Deploy.s.sol` (Fase 7); `.env.example`; `README.md`.
+- `forge build` OK; `forge test` → **8 PASS** (fuzz 1000).
 
 ---
 
@@ -320,6 +330,6 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ## 9. Próximo paso
 
-**Esperando tu autorización para la Fase 0** (setup Foundry + estructura).
+**Fase 0 cerrada.** Esperando autorización para la **Fase 1** (`ShareMath` + `StETH` submit/mint shares).
 
-Responde: **`Autorizo Fase 0`** para continuar.
+Responde: **`Autorizo Fase 1`** para continuar.
