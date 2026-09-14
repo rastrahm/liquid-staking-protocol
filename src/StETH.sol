@@ -7,6 +7,8 @@ import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/Reentrancy
 
 import {IStETH} from "./interfaces/IStETH.sol";
 import {ILiquidStakingPool} from "./interfaces/ILiquidStakingPool.sol";
+import {IDepositContract} from "./interfaces/IDepositContract.sol";
+import {INodeOperatorsRegistry} from "./interfaces/INodeOperatorsRegistry.sol";
 import {FeeDistributor} from "./FeeDistributor.sol";
 import {ShareMath} from "./libraries/ShareMath.sol";
 import {LiquidStakingErrors} from "./errors/LiquidStakingErrors.sol";
@@ -15,6 +17,12 @@ import {LiquidStakingErrors} from "./errors/LiquidStakingErrors.sol";
 /// @notice Shares-based rebasing liquid staking token (stETH-style).
 /// @dev Pooled ether = bufferedEther + clBalance. Oracle reports update CL/EL accounting.
 contract StETH is IStETH, ILiquidStakingPool, Ownable2Step, ReentrancyGuardTransient {
+    /// @notice Size of one validator deposit.
+    uint256 public constant DEPOSIT_SIZE = 32 ether;
+
+    uint256 private constant PUBKEY_LENGTH = 48;
+    uint256 private constant SIGNATURE_LENGTH = 96;
+
     /// @notice Emitted after an authorized oracle accounting report.
     /// @param clBalance New consensus-layer balance.
     /// @param elRewards Execution-layer rewards credited.
@@ -32,6 +40,11 @@ contract StETH is IStETH, ILiquidStakingPool, Ownable2Step, ReentrancyGuardTrans
         uint256 operatorShares,
         uint256 feeEther
     );
+
+    /// @notice Emitted when buffered ETH is deposited to the Eth2 deposit contract.
+    /// @param count Number of 32 ETH deposits performed.
+    /// @param totalDepositedValidators Running total of deposited validators.
+    event DepositedValidators(uint256 count, uint256 totalDepositedValidators);
 
     /// @dev Shares held by each account.
     mapping(address => uint256) private _shares;
@@ -57,6 +70,18 @@ contract StETH is IStETH, ILiquidStakingPool, Ownable2Step, ReentrancyGuardTrans
     /// @notice Last time `handleOracleReport` succeeded.
     uint256 public lastReportTimestamp;
 
+    /// @notice Eth2 deposit contract.
+    IDepositContract public depositContract;
+
+    /// @notice Registry providing unused validator signing keys.
+    INodeOperatorsRegistry public operatorsRegistry;
+
+    /// @notice ETH1 withdrawal credentials (32 bytes) for deposits.
+    bytes32 public withdrawalCredentials;
+
+    /// @notice Number of validators deposited via `depositBufferedEther`.
+    uint256 public depositedValidators;
+
     /// @param owner_ Admin for oracle / fee distributor wiring.
     constructor(address owner_) Ownable(owner_) {
         if (owner_ == address(0)) revert LiquidStakingErrors.ZeroAddress();
@@ -74,6 +99,63 @@ contract StETH is IStETH, ILiquidStakingPool, Ownable2Step, ReentrancyGuardTrans
     function setFeeDistributor(address feeDistributor_) external onlyOwner {
         if (feeDistributor_ == address(0)) revert LiquidStakingErrors.ZeroAddress();
         feeDistributor = FeeDistributor(feeDistributor_);
+    }
+
+    /// @notice Sets the Eth2 deposit contract. Only owner.
+    function setDepositContract(address depositContract_) external onlyOwner {
+        if (depositContract_ == address(0)) revert LiquidStakingErrors.ZeroAddress();
+        depositContract = IDepositContract(depositContract_);
+    }
+
+    /// @notice Sets the node operators registry. Only owner.
+    function setOperatorsRegistry(address operatorsRegistry_) external onlyOwner {
+        if (operatorsRegistry_ == address(0)) revert LiquidStakingErrors.ZeroAddress();
+        operatorsRegistry = INodeOperatorsRegistry(operatorsRegistry_);
+    }
+
+    /// @notice Sets withdrawal credentials used for validator deposits. Only owner.
+    function setWithdrawalCredentials(bytes32 withdrawalCredentials_) external onlyOwner {
+        if (withdrawalCredentials_ == bytes32(0)) revert LiquidStakingErrors.InvalidReport();
+        withdrawalCredentials = withdrawalCredentials_;
+    }
+
+    /// @notice Deposits buffered ETH in 32 ETH chunks to the Eth2 deposit contract.
+    /// @dev Permissionless keeper entrypoint. Moves buffer → provisional `clBalance` so pooled ether is unchanged.
+    /// @param maxDeposits Maximum number of validators to deposit in this call.
+    /// @return depositsCount Number of deposits performed.
+    function depositBufferedEther(uint256 maxDeposits) external nonReentrant returns (uint256 depositsCount) {
+        if (address(depositContract) == address(0) || address(operatorsRegistry) == address(0)) {
+            revert LiquidStakingErrors.ZeroAddress();
+        }
+        if (withdrawalCredentials == bytes32(0)) revert LiquidStakingErrors.InvalidReport();
+        if (maxDeposits == 0) revert LiquidStakingErrors.InvalidReport();
+
+        uint256 depositsAvailable = bufferedEther / DEPOSIT_SIZE;
+        depositsCount = depositsAvailable < maxDeposits ? depositsAvailable : maxDeposits;
+        if (depositsCount == 0) revert LiquidStakingErrors.InsufficientBalance();
+
+        (bytes memory pubkeys, bytes memory signatures) = operatorsRegistry.assignNextSigningKeys(depositsCount);
+
+        uint256 totalValue = depositsCount * DEPOSIT_SIZE;
+        // Effects: keep total pooled ether constant (buffer → provisional CL).
+        bufferedEther -= totalValue;
+        clBalance += totalValue;
+        depositedValidators += depositsCount;
+
+        bytes memory credentials = abi.encodePacked(withdrawalCredentials);
+
+        for (uint256 i = 0; i < depositsCount;) {
+            bytes memory pubkey = _slice(pubkeys, i * PUBKEY_LENGTH, PUBKEY_LENGTH);
+            bytes memory signature = _slice(signatures, i * SIGNATURE_LENGTH, SIGNATURE_LENGTH);
+            bytes32 depositDataRoot = keccak256(abi.encodePacked(pubkey, withdrawalCredentials, signature, DEPOSIT_SIZE));
+
+            depositContract.deposit{value: DEPOSIT_SIZE}(pubkey, credentials, signature, depositDataRoot);
+            unchecked {
+                ++i;
+            }
+        }
+
+        emit DepositedValidators(depositsCount, depositedValidators);
     }
 
     /// @notice Current consensus-layer balance from the last report.
@@ -299,5 +381,16 @@ contract StETH is IStETH, ILiquidStakingPool, Ownable2Step, ReentrancyGuardTrans
         if (owner_ == address(0) || spender == address(0)) revert LiquidStakingErrors.ZeroAddress();
         _allowances[owner_][spender] = amount;
         emit Approval(owner_, spender, amount);
+    }
+
+    /// @dev Copies a byte slice into a new `bytes` buffer.
+    function _slice(bytes memory data, uint256 start, uint256 len) private pure returns (bytes memory out) {
+        out = new bytes(len);
+        for (uint256 i = 0; i < len;) {
+            out[i] = data[start + i];
+            unchecked {
+                ++i;
+            }
+        }
     }
 }
