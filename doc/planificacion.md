@@ -1,8 +1,8 @@
 # Planificación — Módulo 18: Liquid Staking & Staking Derivatives
 
-**Estado:** Fases **0–5** ✅ · Fases **6–7** 🔒 pendientes.  
+**Estado:** Fases **0–6** ✅ · Fase **7** 🔒 pendiente.  
 **Regla de avance:** cada fase requiere **autorización explícita** del responsable antes de empezar (*“autorizo Fase N”* o equivalente).
-**Suite:** `forge test` → **75 PASS**.
+**Suite:** `forge test` → **84 PASS**.
 
 ---
 
@@ -193,7 +193,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 | 3 | `AccountingOracle` + rebase +/− + fees | ✅ Completada | ✅ Autorizada |
 | 4 | `NodeOperatorsRegistry` + DepositContract integration | ✅ Completada | ✅ Autorizada |
 | 5 | `WithdrawalQueue` request / finalize / claim | ✅ Completada | ✅ Autorizada |
-| 6 | Suite seguridad: fuzz slash + invariantes solvencia | 🔒 Pendiente | — |
+| 6 | Suite seguridad: fuzz slash + invariantes solvencia | ✅ Completada | ✅ Autorizada |
 | 7 | Gas + Deploy + NatSpec / cierre v1 | 🔒 Pendiente | — |
 
 **Cómo autorizar:** responde en el chat con `Autorizo Fase N` (o rechaza con cambios concretos).
@@ -328,7 +328,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ---
 
-### Fase 6 — Fuzz slash + invariantes 🔒
+### Fase 6 — Fuzz slash + invariantes ✅
 
 **Objetivo:** resiliencia ante yield negativo y solvencia del pool.
 
@@ -337,6 +337,15 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 3. Invariante: `sum(sharesOf) == totalShares`.
 
 **Criterio de salida:** fuzz (>=1000) + invariantes en verde.
+
+**Hecho (2026-09-14):**
+- `test/fuzz/SlashingResilience.t.sol` — converters, submit post-slash, withdraw path, no soft-lock.
+- `test/invariant/LiquidStakingHandler.sol` + `PoolSolvency.invariant.t.sol`:
+  - shares conservadas (actores + queue)
+  - `balance(pool) >= bufferedEther`
+  - Σ balances ≤ total pooled
+  - pooled > 0 si hay shares
+- **`forge test` → 84 PASS** (invariants 256 runs × 15 depth).
 
 ---
 
@@ -370,6 +379,6 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ## 9. Próximo paso
 
-**Fase 5 cerrada.** Esperando autorización para la **Fase 6** (fuzz slash + invariantes de solvencia).
+**Fase 6 cerrada.** Esperando autorización para la **Fase 7** (Gas + Deploy + NatSpec / cierre v1).
 
-Responde: **`Autorizo Fase 6`** para continuar.
+Responde: **`Autorizo Fase 7`** para continuar.
