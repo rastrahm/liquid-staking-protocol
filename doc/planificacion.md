@@ -1,8 +1,8 @@
 # Planificación — Módulo 18: Liquid Staking & Staking Derivatives
 
-**Estado:** Fases **0–2** ✅ · Fases **3–7** 🔒 pendientes.  
+**Estado:** Fases **0–3** ✅ · Fases **4–7** 🔒 pendientes.  
 **Regla de avance:** cada fase requiere **autorización explícita** del responsable antes de empezar (*“autorizo Fase N”* o equivalente).
-**Suite:** `forge test` → **44 PASS**.
+**Suite:** `forge test` → **57 PASS**.
 
 ---
 
@@ -190,7 +190,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 | 0 | Setup Foundry + estructura + errors/math stub | ✅ Completada | ✅ Autorizada |
 | 1 | `ShareMath` + `StETH` submit/mint shares | ✅ Completada | ✅ Autorizada |
 | 2 | `WstETH` wrap/unwrap | ✅ Completada | ✅ Autorizada |
-| 3 | `AccountingOracle` + rebase +/− + fees | 🔒 Pendiente | — |
+| 3 | `AccountingOracle` + rebase +/− + fees | ✅ Completada | ✅ Autorizada |
 | 4 | `NodeOperatorsRegistry` + DepositContract integration | 🔒 Pendiente | — |
 | 5 | `WithdrawalQueue` request / finalize / claim | 🔒 Pendiente | — |
 | 6 | Suite seguridad: fuzz slash + invariantes solvencia | 🔒 Pendiente | — |
@@ -268,7 +268,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ---
 
-### Fase 3 — Oracle + rebase + fees 🔒
+### Fase 3 — Oracle + rebase + fees ✅
 
 **Objetivo:** reportes autorizados actualizan pooled ether; fees con cap; negative rebase seguro.
 
@@ -278,6 +278,14 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 4. Intervalo mínimo entre reportes.
 
 **Criterio de salida:** tests positive/negative rebase + auth oracle en verde.
+
+**Hecho (2026-09-14):**
+- `FeeDistributor`: `MAX_PROTOCOL_FEE_BPS=1000`, split treasury/operators inmutable.
+- `AccountingOracle`: comité, `submitReport`, intervalo, `UnauthorizedOracle` / `ReportTooEarly`.
+- `StETH.handleOracleReport`: CL + EL rewards, fee mint Lido-style, `NegativeRebaseBlocked` si pooled=0 con shares.
+- `Ownable2Step` + `setOracle` / `setFeeDistributor`.
+- Tests: `OracleReport.t.sol`.
+- **`forge test` → 57 PASS**.
 
 ---
 
@@ -347,6 +355,6 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ## 9. Próximo paso
 
-**Fase 2 cerrada.** Esperando autorización para la **Fase 3** (`AccountingOracle` + rebase +/− + fees).
+**Fase 3 cerrada.** Esperando autorización para la **Fase 4** (`NodeOperatorsRegistry` + Deposit Contract).
 
-Responde: **`Autorizo Fase 3`** para continuar.
+Responde: **`Autorizo Fase 4`** para continuar.

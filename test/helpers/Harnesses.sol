@@ -43,6 +43,8 @@ contract ShareMathHarness {
 /// @title StETHHarness
 /// @notice Allows simulating CL rewards / slash without oracle (Fase 1 tests).
 contract StETHHarness is StETH {
+    constructor() StETH(msg.sender) {}
+
     /// @notice Increases consensus-layer balance to simulate positive rebase.
     function simulateRewards(uint256 amount) external {
         clBalance += amount;
@@ -64,6 +66,12 @@ contract StETHHarness is StETH {
         uint256 remaining = amount - clBalance;
         clBalance = 0;
         bufferedEther -= remaining;
+    }
+
+    /// @notice Moves buffer into CL accounting (simulates validator deposit for lab tests).
+    function moveBufferToCl() external {
+        clBalance += bufferedEther;
+        bufferedEther = 0;
     }
 
     /// @notice Sets CL balance absolutely (lab only).
