@@ -82,6 +82,9 @@ contract StETH is IStETH, ILiquidStakingPool, Ownable2Step, ReentrancyGuardTrans
     /// @notice Number of validators deposited via `depositBufferedEther`.
     uint256 public depositedValidators;
 
+    /// @notice Withdrawal queue authorized to finalize burns / ETH unlocks.
+    address public withdrawalQueue;
+
     /// @param owner_ Admin for oracle / fee distributor wiring.
     constructor(address owner_) Ownable(owner_) {
         if (owner_ == address(0)) revert LiquidStakingErrors.ZeroAddress();
@@ -117,6 +120,29 @@ contract StETH is IStETH, ILiquidStakingPool, Ownable2Step, ReentrancyGuardTrans
     function setWithdrawalCredentials(bytes32 withdrawalCredentials_) external onlyOwner {
         if (withdrawalCredentials_ == bytes32(0)) revert LiquidStakingErrors.InvalidReport();
         withdrawalCredentials = withdrawalCredentials_;
+    }
+
+    /// @notice Sets the withdrawal queue. Only owner.
+    function setWithdrawalQueue(address withdrawalQueue_) external onlyOwner {
+        if (withdrawalQueue_ == address(0)) revert LiquidStakingErrors.ZeroAddress();
+        withdrawalQueue = withdrawalQueue_;
+    }
+
+    /// @notice Burns queue-held shares and unlocks ETH from the buffer to the withdrawal queue.
+    /// @dev Called exclusively by `WithdrawalQueue.finalize`. Keeps share rate consistent for remaining holders.
+    /// @param sharesAmount Shares to burn from the withdrawal queue.
+    /// @param ethAmount ETH to send to the withdrawal queue (must be ≤ bufferedEther and contract balance).
+    function finalizeWithdrawals(uint256 sharesAmount, uint256 ethAmount) external nonReentrant {
+        if (msg.sender != withdrawalQueue) revert LiquidStakingErrors.OnlyWithdrawalQueue();
+        if (sharesAmount == 0 || ethAmount == 0) revert LiquidStakingErrors.InvalidReport();
+        if (bufferedEther < ethAmount) revert LiquidStakingErrors.InsufficientBalance();
+        if (address(this).balance < ethAmount) revert LiquidStakingErrors.InsufficientBalance();
+
+        bufferedEther -= ethAmount;
+        _burnShares(msg.sender, sharesAmount);
+
+        (bool ok,) = msg.sender.call{value: ethAmount}("");
+        if (!ok) revert LiquidStakingErrors.EthTransferFailed();
     }
 
     /// @notice Deposits buffered ETH in 32 ETH chunks to the Eth2 deposit contract.
