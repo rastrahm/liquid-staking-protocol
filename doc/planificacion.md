@@ -1,8 +1,8 @@
 # Planificación — Módulo 18: Liquid Staking & Staking Derivatives
 
-**Estado:** Fases **0–4** ✅ · Fases **5–7** 🔒 pendientes.  
+**Estado:** Fases **0–5** ✅ · Fases **6–7** 🔒 pendientes.  
 **Regla de avance:** cada fase requiere **autorización explícita** del responsable antes de empezar (*“autorizo Fase N”* o equivalente).
-**Suite:** `forge test` → **66 PASS**.
+**Suite:** `forge test` → **75 PASS**.
 
 ---
 
@@ -192,7 +192,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 | 2 | `WstETH` wrap/unwrap | ✅ Completada | ✅ Autorizada |
 | 3 | `AccountingOracle` + rebase +/− + fees | ✅ Completada | ✅ Autorizada |
 | 4 | `NodeOperatorsRegistry` + DepositContract integration | ✅ Completada | ✅ Autorizada |
-| 5 | `WithdrawalQueue` request / finalize / claim | 🔒 Pendiente | — |
+| 5 | `WithdrawalQueue` request / finalize / claim | ✅ Completada | ✅ Autorizada |
 | 6 | Suite seguridad: fuzz slash + invariantes solvencia | 🔒 Pendiente | — |
 | 7 | Gas + Deploy + NatSpec / cierre v1 | 🔒 Pendiente | — |
 
@@ -309,7 +309,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ---
 
-### Fase 5 — WithdrawalQueue 🔒
+### Fase 5 — WithdrawalQueue ✅
 
 **Objetivo:** ciclo completo request → finalize → claim.
 
@@ -318,6 +318,13 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 3. Integración con oracle/pool para fondear finalización.
 
 **Criterio de salida:** lifecycle tests en verde.
+
+**Hecho (2026-09-14):**
+- `IWithdrawalQueue` + `WithdrawalQueue` (request-id, owner/finalizer).
+- `StETH.finalizeWithdrawals` — burn shares de la cola + unlock ETH del buffer (solo queue).
+- Claim con CEI + `.call{value}`; errores `WithdrawalNotFinalized` / `AlreadyClaimed` / `NotOwner`.
+- Tests: `WithdrawalQueue.t.sol` (lifecycle, rebase post-request, fuzz).
+- **`forge test` → 75 PASS**.
 
 ---
 
@@ -363,6 +370,6 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ## 9. Próximo paso
 
-**Fase 4 cerrada.** Esperando autorización para la **Fase 5** (`WithdrawalQueue` request / finalize / claim).
+**Fase 5 cerrada.** Esperando autorización para la **Fase 6** (fuzz slash + invariantes de solvencia).
 
-Responde: **`Autorizo Fase 5`** para continuar.
+Responde: **`Autorizo Fase 6`** para continuar.

@@ -51,4 +51,7 @@ library LiquidStakingErrors {
 
     /// @notice Caller is not the staking pool.
     error OnlyPool();
+
+    /// @notice Caller is not the withdrawal queue.
+    error OnlyWithdrawalQueue();
 }
