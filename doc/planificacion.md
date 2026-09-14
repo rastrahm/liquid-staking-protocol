@@ -1,7 +1,8 @@
 # Planificación — Módulo 18: Liquid Staking & Staking Derivatives
 
-**Estado:** Fase **0** ✅ completada · Fases **1–7** 🔒 pendientes.  
+**Estado:** Fases **0–1** ✅ · Fases **2–7** 🔒 pendientes.  
 **Regla de avance:** cada fase requiere **autorización explícita** del responsable antes de empezar (*“autorizo Fase N”* o equivalente).
+**Suite:** `forge test` → **29 PASS**.
 
 ---
 
@@ -187,7 +188,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 | Fase | Nombre | Estado | Autorización |
 |------|--------|--------|--------------|
 | 0 | Setup Foundry + estructura + errors/math stub | ✅ Completada | ✅ Autorizada |
-| 1 | `ShareMath` + `StETH` submit/mint shares | 🔒 Pendiente | — |
+| 1 | `ShareMath` + `StETH` submit/mint shares | ✅ Completada | ✅ Autorizada |
 | 2 | `WstETH` wrap/unwrap | 🔒 Pendiente | — |
 | 3 | `AccountingOracle` + rebase +/− + fees | 🔒 Pendiente | — |
 | 4 | `NodeOperatorsRegistry` + DepositContract integration | 🔒 Pendiente | — |
@@ -226,7 +227,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ---
 
-### Fase 1 — ShareMath + StETH submit 🔒
+### Fase 1 — ShareMath + StETH submit ✅
 
 **Objetivo:** depósito ETH → mint shares con ratio correcto bajo distintos `totalPooledEther`.
 
@@ -236,6 +237,15 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 4. CEI + reentrancy guard en submit.
 
 **Criterio de salida:** unit + fuzz de ratios deposit-to-share en verde.
+
+**Hecho (2026-09-14):**
+- `ShareMath`: WAD/RAY, `ethToShares` / `sharesToEth` / `mulDiv` / `shareRateRay` vía OZ `Math.mulDiv` (512-bit).
+- `IStETH` + `StETH`: `submit` / `receive`, shares rebasing, ERC-20 (`transfer`/`approve`/`transferFrom`), `transferShares`.
+- Contabilidad: `bufferedEther + clBalance`; `ReentrancyGuardTransient`; CEI en `_submit`.
+- Harnesses de test: `ShareMathHarness`, `StETHHarness` (`simulateRewards` / `simulateLoss`).
+- Tests: `ShareMath.t.sol`, `StETH.t.sol` (primer depósito 1:1, rebase +/−, fuzz ratios).
+- Eliminado stub `Placeholder`.
+- **`forge test` → 29 PASS**.
 
 ---
 
@@ -330,6 +340,6 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 
 ## 9. Próximo paso
 
-**Fase 0 cerrada.** Esperando autorización para la **Fase 1** (`ShareMath` + `StETH` submit/mint shares).
+**Fase 1 cerrada.** Esperando autorización para la **Fase 2** (`WstETH` wrap/unwrap).
 
-Responde: **`Autorizo Fase 1`** para continuar.
+Responde: **`Autorizo Fase 2`** para continuar.
