@@ -1,6 +1,8 @@
 # Auditoría SWC — Liquid Staking & Staking Derivatives
 
-Verificación del protocolo de liquid staking (módulo 18) contra el [SWC Registry](https://swcregistry.io/) (EIP-1470). Estilo alineado a [`01-erc20/doc/SWC-AUDIT.md`](../../01-erc20/doc/SWC-AUDIT.md).
+**Idioma:** Español · [English](./SWC-AUDIT-EN.md)
+
+Verificación del protocolo de liquid staking (módulo 18) contra el [SWC Registry](https://swcregistry.io/) (EIP-1470). Estilo alineado a [`01-erc20/doc/SWC-AUDIT-ES.md`](../../01-erc20/doc/SWC-AUDIT-ES.md).
 
 > **Nota:** El SWC Registry no se mantiene activamente desde ~2020. Complementar con [SCSVS](https://github.com/ComposableSecurity/SCSVS) y [EEA EthTrust](https://entethalliance.org/specs/ethtrust/).
 
@@ -20,7 +22,7 @@ Verificación del protocolo de liquid staking (módulo 18) contra el [SWC Regist
 **Mocks (fuera de prod):** `MockDepositContract`, harnesses de test  
 **Fecha:** 2026-09-14 (Fase 7 / cierre v1)  
 **Referencia tests:** `test/StETH.t.sol`, `test/WstETH.t.sol`, `test/OracleReport.t.sol`, `test/DepositBufferedEther.t.sol`, `test/WithdrawalQueue.t.sol`, `test/fuzz/SlashingResilience.t.sol`, `test/invariant/PoolSolvency.invariant.t.sol`, `test/gas/`  
-**Índice:** [`README.md`](./README.md) · README módulo: [`../README.md`](../README.md)
+**Índice:** [`README-ES.md`](./README-ES.md) · README módulo: [`../README-ES.md`](../README-ES.md)
 
 ---
 
@@ -168,4 +170,4 @@ Verificación del protocolo de liquid staking (módulo 18) contra el [SWC Regist
 - [EIP-1470](https://eips.ethereum.org/EIPS/eip-1470)
 - Eth2 Deposit Contract: `0x00000000219ab540356cBB839Cbe05303d7705Fa`
 - Lido-style shares accounting (referencia de diseño educativa)
-- [`01-erc20/doc/SWC-AUDIT.md`](../../01-erc20/doc/SWC-AUDIT.md)
+- [`01-erc20/doc/SWC-AUDIT-ES.md`](../../01-erc20/doc/SWC-AUDIT-ES.md)

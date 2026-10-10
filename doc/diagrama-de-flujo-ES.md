@@ -1,5 +1,7 @@
 # Diagrama de flujo — Deposit, oracle rebase y withdrawal queue
 
+**Idioma:** Español · [English](./diagrama-de-flujo-EN.md)
+
 Flujos de decisión internos del protocolo (módulo 18, **v1 implementado**).  
 **Sync:** 2026-09-14 · Fases **0–7** ✅ · 90 PASS.
 

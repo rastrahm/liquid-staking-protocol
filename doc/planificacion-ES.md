@@ -1,5 +1,7 @@
 # Planificación — Módulo 18: Liquid Staking & Staking Derivatives
 
+**Idioma:** Español · [English](./planificacion-EN.md)
+
 **Estado:** Fases **0–7** ✅ (módulo v1 cerrado).  
 **Regla de avance:** la regla de autorización por fase aplicó durante la construcción; v1 ya no tiene fases pendientes.  
 **Suite:** `forge test` → **90 PASS**.
@@ -73,21 +75,25 @@ Stack: **Foundry + Solidity `0.8.24`**. Frontend Next.js queda **fuera de alcanc
 
 ```
 18-liquid-staking-protocol/
-├── README.md
+├── README.md                          # Índice bilingüe
+├── README-ES.md / README-EN.md
 ├── .cursorrules
 ├── .gitignore
 ├── .env.example
 ├── .gas-snapshot
 ├── foundry.toml
 ├── remappings.txt
-├── doc/
-│   ├── README.md
-│   ├── planificacion.md
-│   ├── diagrama-de-clases.md
-│   ├── diagrama-de-flujo.md
-│   ├── flujograma.md
-│   ├── SWC-AUDIT.md
-│   └── GAS.md
+├── portfolio/                         # Página de portfolio (ES/EN)
+├── doc/                               # Cada documento en -ES.md y -EN.md
+│   ├── README.md                      # Índice bilingüe de documentación
+│   ├── README-ES.md / README-EN.md
+│   ├── decisiones-tecnicas-y-logica-{ES,EN}.md
+│   ├── planificacion-{ES,EN}.md
+│   ├── diagrama-de-clases-{ES,EN}.md
+│   ├── diagrama-de-flujo-{ES,EN}.md
+│   ├── flujograma-{ES,EN}.md
+│   ├── SWC-AUDIT-{ES,EN}.md
+│   └── GAS-{ES,EN}.md
 ├── src/
 │   ├── StETH.sol                      # Pool unificado: shares + buffer + CL + deposits + finalizeWithdrawals
 │   ├── WstETH.sol                     # Wrapper value-accruing (1 wstETH = 1 share)
@@ -367,7 +373,8 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 **Hecho (2026-09-14):**
 - `script/Deploy.s.sol` — StETH, WstETH, FeeDistributor, Oracle, Queue, Registry, MockDeposit + wiring.
 - `.env.example` ampliado; `test/gas/LiquidStaking.gas.t.sol` + `.gas-snapshot`.
-- `doc/SWC-AUDIT.md` (matriz SWC-100–136, estilo módulo 01); `doc/GAS.md`; `doc/README.md`.
+- `doc/SWC-AUDIT-ES.md` (matriz SWC-100–136, estilo módulo 01); `doc/GAS-ES.md`; `doc/README.md`.
+- Documentación bilingüe: cada archivo en `-ES.md` / `-EN.md`, con `README.md` como índice.
 - Diagramas + planificación realineados al código (pool = `StETH`, APIs reales, sin `LiquidStakingPool` / `MockOracle`).
 - **`forge test` → 90 PASS**.
 
@@ -385,7 +392,7 @@ Obligatorios del módulo: `UnauthorizedOracle()`, dual-token accounting, withdra
 - [x] CEI + `.call{value}` + custom errors + NatSpec
 - [x] `forge test` (unit + fuzz + invariant) verde
 - [x] Frontend Next.js **no** incluido (post-v1)
-- [x] `doc/SWC-AUDIT.md` (estilo módulo 01)
+- [x] `doc/SWC-AUDIT-ES.md` (estilo módulo 01)
 - [x] Gas snapshot + `Deploy.s.sol`
 
 ---
