@@ -1,5 +1,7 @@
 # Diagrama de clases — Liquid Staking & Staking Derivatives
 
+**Idioma:** Español · [English](./diagrama-de-clases-EN.md)
+
 Vista estructural alineada a la implementación v1 (módulo 18).  
 **Sync:** 2026-09-14 · Fases **0–7** ✅ (v1 cerrado · 90 PASS).
 

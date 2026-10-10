@@ -1,5 +1,7 @@
 # Flujograma — Ciclo completo Liquid Staking Protocol
 
+**Idioma:** Español · [English](./flujograma-EN.md)
+
 Flujo extremo a extremo entre stakers, pool, oracle, deposit contract y withdrawal queue (módulo 18, **v1 implementado**).  
 **Sync:** 2026-09-14 · Fases **0–7** ✅ · 90 PASS.
 
@@ -133,8 +135,8 @@ flowchart TD
 
 | Documento | Contenido |
 |-----------|-----------|
-| [diagrama-de-clases.md](./diagrama-de-clases.md) | Contratos, interfaces, librerías (implementación) |
-| [diagrama-de-flujo.md](./diagrama-de-flujo.md) | Decisiones internas por función |
-| [planificacion.md](./planificacion.md) | Fases 0–7 cerradas, arquitectura v1 |
-| [SWC-AUDIT.md](./SWC-AUDIT.md) | Matriz SWC |
-| [GAS.md](./GAS.md) | Baseline gas |
+| [diagrama-de-clases-ES.md](./diagrama-de-clases-ES.md) | Contratos, interfaces, librerías (implementación) |
+| [diagrama-de-flujo-ES.md](./diagrama-de-flujo-ES.md) | Decisiones internas por función |
+| [planificacion-ES.md](./planificacion-ES.md) | Fases 0–7 cerradas, arquitectura v1 |
+| [SWC-AUDIT-ES.md](./SWC-AUDIT-ES.md) | Matriz SWC |
+| [GAS-ES.md](./GAS-ES.md) | Baseline gas |

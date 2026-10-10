@@ -1,5 +1,7 @@
 # Optimización de gas — Liquid Staking Protocol
 
+**Idioma:** Español · [English](./GAS-EN.md)
+
 Regenerar:
 
 ```bash
@@ -51,4 +53,4 @@ forge snapshot --match-contract LiquidStakingGasTest
 
 - [`foundry.toml`](../foundry.toml)
 - [`test/gas/LiquidStaking.gas.t.sol`](../test/gas/LiquidStaking.gas.t.sol)
-- [SWC-AUDIT.md](./SWC-AUDIT.md)
+- [SWC-AUDIT-ES.md](./SWC-AUDIT-ES.md)
